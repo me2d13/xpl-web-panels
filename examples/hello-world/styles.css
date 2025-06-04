@@ -1,0 +1,23 @@
+section {
+  background-color: #f0f0f0;
+  margin: 20px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #4CAF50; /* Green */
+  color: white;
+  padding: 5px 10px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+span {
+  font-weight: bold;
+  font-size: 20px;
+  margin: 5px 20px;
+}

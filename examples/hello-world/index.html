@@ -1,0 +1,71 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>XPL web api demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="../../xpl-web-api.js"></script>
+</head>
+
+<body>
+    <section>
+        <h2>Send command</h2>
+        <button id="btnPauseCommand">Toggle pause</button>
+    </section>
+    <section>
+        <h2>Get dataref</h2>
+        <div>Heading: <span id="headingOneTimeValue">?</span> <button id="btnGetHeading">Read heading</button></div>
+    </section>
+    <section>
+        <h2>Write dataref</h2>
+        <div>Set heading: <input type="number" id="headingInput" value="100" /> <button id="btnSetHeading">Set heading</button></div>
+    </section>
+    <section>
+        <h2>Subscribe dataref</h2>
+        <div>Heading: <span id="headingSubscribed">?</span> <button id="btnSubsribe">Connect</button></div>
+    </section>
+    <script>
+        // until X-plane fixes CORS for POST and adds access from local network
+        // proxy has to be used at X-plane computer - e.g. from https://github.com/garmeeh/local-cors-proxy running command:
+        //   lcp --proxyUrl http://localhost:8086
+
+        const xplApi = XplWebApi(); // send command won't work without proxy
+        //const xplApi = XplWebApi({ apiUrl: 'http://localhost:8010/proxy/api/v2' }); // with proxy localhost can by IP with x-plane computer
+
+        // send command
+        document.getElementById('btnPauseCommand').onclick = () => {
+            xplApi.executeCommand('sim/operation/pause_toggle');
+        };
+
+        // read dataref
+        document.getElementById('btnGetHeading').onclick = () => {
+            xplApi.getDataRefValue('sim/cockpit/autopilot/heading_mag').then((value) => {
+                document.getElementById('headingOneTimeValue').innerText = value;
+            });
+        };
+
+        // write dataref
+        document.getElementById('btnSetHeading').onclick = () => {
+            const value = parseFloat(document.getElementById('headingInput').value);
+            if (!isNaN(value)) {
+                xplApi.setDataRefValue('sim/cockpit/autopilot/heading_mag', value);
+            } else {
+                alert('Please enter a valid number');
+            }
+        };
+
+        // subscribe to dataref
+        const connectButton = document.getElementById('btnSubsribe');
+        connectButton.onclick = () => {
+            connectButton.style.display = 'none'; // hide button after connection
+            xplApi.subscribeDataRefs('sim/cockpit/autopilot/heading_mag', (value) => {
+                document.getElementById('headingSubscribed').innerText = value['sim/cockpit/autopilot/heading_mag'];
+            });
+        };
+
+    </script>
+</body>
+
+</html>

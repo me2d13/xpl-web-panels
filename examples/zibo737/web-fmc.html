@@ -1,0 +1,32 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>XPL Web FMC</title>
+    <meta name="description" content="WebFMC container">
+
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/menu.js"></script>
+</head>
+
+<body>
+    <script>
+        // after the page is loaded, create buttons in parent div id internalViews
+        window.addEventListener('DOMContentLoaded', () => {
+            // create menu
+            buildMenu('menu', 'web-fmc.html');
+        });
+    </script>
+    <div">
+    <div id="menu" class="menu-container"></div>
+    <div style="position: relative; height: 75vh;">
+        <iframe id="webFmcFrame" src="http://192.168.1.121:9090" style="position:absolute;left:0;right:0;bottom:0;overflow:auto;width:100%;height:100%;"></iframe>
+    </div>
+    </div>
+</body>
+
+</html>

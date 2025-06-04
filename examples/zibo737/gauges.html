@@ -1,0 +1,100 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Flaps gauge</title>
+    <meta name="description" content="Simple flaps gauge for Zibo 737-800">
+
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/xpl-web-api.js"></script>
+    <script src="js/menu.js"></script>
+</head>
+
+<body>
+    <script>
+        const flapValueToNeedleAngle = (flapValue) => {
+            // 40 flaps is 266 rotation
+            // 0 flaps is 0 rotation
+            // but the gauge is not linear, so we need to calculate the angle based on the flap value
+            // let's have fixed points to convert flap value to angle
+            const fixedPoints = [
+                { flaps: 0, angle: 0 },
+                { flaps: 1, angle: 35 },
+                { flaps: 2, angle: 78 },
+                { flaps: 5, angle: 111 },
+                { flaps: 10, angle: 149 },
+                { flaps: 15, angle: 180 },
+                { flaps: 25, angle: 210 },
+                { flaps: 30, angle: 237 },
+                { flaps: 40, angle: 266 }
+            ];
+            // find the two fixed points that are closest to the flap value
+            let lowerPoint = fixedPoints[0];
+            let upperPoint = fixedPoints[fixedPoints.length - 1];
+            for (let i = 1; i < fixedPoints.length; i++) {
+                if (fixedPoints[i].flaps <= flapValue && fixedPoints[i].flaps > lowerPoint.flaps) {
+                    lowerPoint = fixedPoints[i];
+                }
+                if (fixedPoints[i].flaps >= flapValue && fixedPoints[i].flaps < upperPoint.flaps) {
+                    upperPoint = fixedPoints[i];
+                }
+            }
+            // if the flap value is outside the fixed points, return the angle of the closest point
+            if (flapValue <= lowerPoint.flaps) {
+                return lowerPoint.angle;
+            }
+            if (flapValue >= upperPoint.flaps) {
+                return upperPoint.angle;
+            }
+            // interpolate the angle based on the flap value
+            const ratio = (flapValue - lowerPoint.flaps) / (upperPoint.flaps - lowerPoint.flaps);
+            const angle = lowerPoint.angle + ratio * (upperPoint.angle - lowerPoint.angle);
+            return angle;
+
+        };
+        const xplApi = XplWebApi({
+            apiUrl: 'http://192.168.1.121/xpl-api/api/v2',
+            webSocketUrl: 'ws://192.168.1.121:8020/api/v2',
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // create menu
+            buildMenu('menu', 'gauges.html');
+            // subscribe to the flap indicator data ref
+            xplApi.subscribeDataRefs('laminar/B738/flap_indicator', (valuesPerDataRefName) => {
+                const flapValue = valuesPerDataRefName['laminar/B738/flap_indicator'];
+                if (flapValue) {
+                    const singleValue = flapValue[0]; // ignore right flaps for simplicity
+                    const rotation = flapValueToNeedleAngle(singleValue);
+                    const needle = document.getElementById('needle');
+                    needle.style.transform = `rotate(${rotation}deg)`;
+                    needle.style.display = 'block'; // to show up
+                } else {
+                    console.log('Strange flap indicator data received:', valuesPerDataRefName);
+                }
+            });
+        });
+    </script>
+
+    <div id="menu" class="menu-container"></div>
+    <div>
+        <!-- The whole gauge can be easily scaled by the value below to fit screen -->
+        <div style="position: relative; width: 900px; margin: 0 auto; transform: scale(0.5); transform-origin: top left;">
+            <img class="img-center" src="img/flap-gauge-empty.png" />
+            <img src="img/flap-needle-alpha.png" id="needle" style="
+            transform-origin: 259px; 
+            transform: rotate(0deg);
+            position: absolute;
+            top: 402px;
+            left: 185px;
+            display: none;
+            " />
+        </div>
+    </div>
+</body>
+
+</html>

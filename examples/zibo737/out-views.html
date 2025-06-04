@@ -1,0 +1,84 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>XPL views</title>
+    <meta name="description" content="X-camera views selector for Zibo 737-800">
+
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/xpl-web-api.js"></script>
+    <script src="js/menu.js"></script>
+</head>
+
+<body>
+    <script>
+        // until X-plane fixes CORS for POST and access from local network
+        // proxy has to be used at X-plane computer - e.g. running command:
+        //   lcp --proxyUrl http://localhost:8086
+        // see https://github.com/garmeeh/local-cors-proxy
+
+        //const xplApi = XplWebApi();
+        const xplApi = XplWebApi({ apiUrl: 'http://192.168.1.121/xpl-api/api/v2' });
+
+        const buttons = [
+            {
+                style: "top: -20px; left: 50%; transform: translate(-50%, 0);",
+                text: 'Front',
+                command: 'SRS/X-Camera/Select_View_ID_20',
+            },
+            {
+                style: "top: 250px; left: 5%;",
+                text: 'From left',
+                command: 'SRS/X-Camera/Select_View_ID_21',
+            },
+            {
+                style: "top: 250px; right: 7%;",
+                text: 'From right',
+                command: 'SRS/X-Camera/Select_View_ID_22',
+            },
+            {
+                style: "top: 0px; left: 20%;",
+                text: 'Fly by',
+                command: 'sim/view/still_spot',
+            },
+            {
+                style: "bottom: 00px; left: 50%; transform: translate(-50%, 0);",
+                text: 'Back',
+                command: 'SRS/X-Camera/Select_View_ID_23',
+            },
+            {
+                style: "bottom: 28%; left: 55%;",
+                text: 'Gear',
+                command: 'SRS/X-Camera/Select_View_ID_24',
+            },
+        ];
+
+        // after the page is loaded, create buttons in parent div id internalViews
+        window.addEventListener('DOMContentLoaded', () => {
+            // create menu
+            buildMenu('menu', 'out-views.html');
+            // add buttons to the internalViews div
+            const internalViews = document.getElementById('views');
+            buttons.forEach(button => {
+                const btn = document.createElement('button');
+                btn.style = button.style;
+                btn.innerText = button.text;
+                btn.className = 'button-view float-button';
+                btn.onclick = () => xplApi.executeCommand(button.command);
+                internalViews.appendChild(btn);
+            });
+        });
+    </script>
+    <div id="menu" class="menu-container"></div>
+    <div style="transform: scale(0.75); transform-origin: top left;">
+        <div style="position: relative; width: 800px; margin: 0 auto; padding-top: 50px;" id="views">
+            <img class="img-center" width="600px" src="img/plane-4002.svg" />
+        </div>
+    </div>
+</body>
+
+</html>

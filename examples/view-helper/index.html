@@ -1,0 +1,114 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>XPL web views assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="../../xpl-web-api.js"></script>
+</head>
+
+<body>
+    <section>
+        <h2>Views</h2>
+        <button id="btnSubsribe">Connect</button>
+        <div>X: <input id="viewX" /></div>
+        <div>Y: <input id="viewY" /></div>
+        <div>Z: <input id="viewZ" /></div>
+        <div>Head heading: <input id="viewPsi" /></div>
+        <div>Head pitch: <input id="viewThe" /></div>
+        <div>Head roll: <input id="viewPhi" /></div>
+    </section>
+    <section>
+        <h2>Update</h2>
+        <p>Modify values above and send by button below.</p>
+        <p>The message for X-plane API would be:</p>
+        <div><code id="xplMessage"></code></div>
+        <p>WARNING: When X-camera is enabled, setting views via datarefs doesn't work</p>
+        <button id="btnSet">Set by updated values</button>
+    </section>
+    <script>
+        const xplApi = XplWebApi();
+        const codeElement = document.getElementById('xplMessage');
+
+        const buildMessage = () => {
+            const x = parseFloat(document.getElementById('viewX').value);
+            const y = parseFloat(document.getElementById('viewY').value);
+            const z = parseFloat(document.getElementById('viewZ').value);
+            const psi = parseFloat(document.getElementById('viewPsi').value);
+            const the = parseFloat(document.getElementById('viewThe').value);
+            const phi = parseFloat(document.getElementById('viewPhi').value);
+
+            // build message for X-plane API
+            const message = {};
+            if (!isNaN(x)) message['sim/graphics/view/pilots_head_x'] = x;
+            if (!isNaN(y)) message['sim/graphics/view/pilots_head_y'] = y;
+            if (!isNaN(z)) message['sim/graphics/view/pilots_head_z'] = z;
+            if (!isNaN(psi)) message['sim/graphics/view/pilots_head_psi'] = psi;
+            if (!isNaN(the)) message['sim/graphics/view/pilots_head_the'] = the;
+            if (!isNaN(phi)) message['sim/graphics/view/pilots_head_phi'] = phi;
+            return message;
+        };
+
+        // for every input update the message
+        const inputs = ['viewX', 'viewY', 'viewZ', 'viewPsi', 'viewThe', 'viewPhi'];
+        inputs.forEach((inputId) => {
+            const inputElement = document.getElementById(inputId);
+            inputElement.oninput = () => {
+                const message = buildMessage();
+                codeElement.innerText = JSON.stringify(message, null, 2);
+            };
+        });
+
+        // subscribe to dataref
+        const connectButton = document.getElementById('btnSubsribe');
+        connectButton.onclick = () => {
+            connectButton.style.display = 'none'; // hide button after connection
+            xplApi.subscribeDataRefs([
+                'sim/graphics/view/pilots_head_x',
+                'sim/graphics/view/pilots_head_y',
+                'sim/graphics/view/pilots_head_z',
+                'sim/graphics/view/pilots_head_psi',
+                'sim/graphics/view/pilots_head_the',
+                'sim/graphics/view/pilots_head_phi',
+            ], (value) => {
+                // dataref value is present only if it was changed
+                // so we can update the inputs only when the value is changed
+                const rnd = (num) => {
+                    return Math.round(num * 10000) / 10000; // round to 4 decimal places
+                };
+                if (value['sim/graphics/view/pilots_head_x']) {
+                    document.getElementById('viewX').value = rnd(value['sim/graphics/view/pilots_head_x']);
+                }
+                if (value['sim/graphics/view/pilots_head_y']) {
+                    document.getElementById('viewY').value = rnd(value['sim/graphics/view/pilots_head_y']);
+                }
+                if (value['sim/graphics/view/pilots_head_z']) {
+                    document.getElementById('viewZ').value = rnd(value['sim/graphics/view/pilots_head_z']);
+                }
+                if (value['sim/graphics/view/pilots_head_psi']) {
+                    document.getElementById('viewPsi').value = rnd(value['sim/graphics/view/pilots_head_psi']);
+                }
+                if (value['sim/graphics/view/pilots_head_the']) {
+                    document.getElementById('viewThe').value = rnd(value['sim/graphics/view/pilots_head_the']);
+                }
+                if (value['sim/graphics/view/pilots_head_phi']) {
+                    document.getElementById('viewPhi').value = rnd(value['sim/graphics/view/pilots_head_phi']);
+                }
+                const message = buildMessage();
+                codeElement.innerText = JSON.stringify(message, null, 2);
+            });
+        };
+
+        // set values by button
+        const setButton = document.getElementById('btnSet');
+        setButton.onclick = () => {
+            const message = buildMessage();
+            xplApi.setMultipleDataRefValues(message);
+        };
+
+    </script>
+</body>
+
+</html>
