@@ -1,11 +1,7 @@
 const menuItems = [
     {
-        file: 'in-views.html',
-        title: 'Cockpit Views',
-    },
-    {
-        file: 'out-views.html',
-        title: 'Outside Views',
+        file: 'views.html',
+        title: 'Views',
     },
     {
         file: 'web-fmc.html',
