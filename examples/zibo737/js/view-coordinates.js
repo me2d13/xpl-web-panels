@@ -1,4 +1,4 @@
-const views = [
+const viewCoordinates = [
     {
         name: 'After overhead',
         datarefs: {

@@ -12,11 +12,23 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="js/xpl-web-api.js"></script>
     <script src="js/menu.js"></script>
+    <script src="js/view-coordinates.js"></script>
 </head>
 
 <body>
     <script>
-        const xplApi = XplWebApi({ apiUrl: 'http://192.168.1.121/xpl-api/api/v2' });
+        const xplApi = XplWebApi({
+            apiUrl: 'http://192.168.1.105/xpl-api/api/v2',
+            webSocketUrl: 'ws://192.168.1.105:8020/api/v2',
+        });
+        const useCoordinates = true
+        const coordinatesByName = {};
+        if (useCoordinates) {
+            // load coordinates from view-coordinates.js
+            viewCoordinates.forEach(coord => {
+                coordinatesByName[coord.name] = coord.datarefs;
+            });
+        }
 
         const inButtons = [
             {
@@ -69,6 +81,16 @@
                 text: 'Pedestal',
                 command: 'SRS/X-Camera/Select_View_ID_7',
             },
+            {
+                style: "bottom: 5px; left: 5px;",
+                text: 'Fly by',
+                command: 'sim/view/still_spot',
+            },
+            {
+                style: "bottom: 5px; right: 5px;",
+                text: 'Chase',
+                command: 'sim/view/chase',
+            },
         ];
 
         const outButtons = [
@@ -104,6 +126,17 @@
             },
         ];
 
+        const viewButtonClick = (viewName, command) => {
+            if (useCoordinates && coordinatesByName[viewName]) {
+                const coords = coordinatesByName[viewName];
+                console.log(`Setting coordinates for view ${viewName}:`, coords);
+                xplApi.setMultipleDataRefValues(coords);
+            } else {
+                console.log(`No coordinates found for view ${viewName}, executing command ${command}`);
+                xplApi.executeCommand(command);
+            }
+        };
+
 
         // after the page is loaded, create buttons in parent div id internalViews
         window.addEventListener('DOMContentLoaded', () => {
@@ -119,7 +152,7 @@
                 btn.style = button.style;
                 btn.innerText = button.text;
                 btn.className = 'button-view float-button';
-                btn.onclick = () => xplApi.executeCommand(button.command);
+                btn.onclick = () => viewButtonClick(button.text, button.command);
                 internalViews.appendChild(btn);
             });
             const outViews = document.getElementById('outViews');
@@ -128,7 +161,7 @@
                 btn.style = button.style;
                 btn.innerText = button.text;
                 btn.className = 'button-view float-button';
-                btn.onclick = () => xplApi.executeCommand(button.command);
+                btn.onclick = () => viewButtonClick(button.text, button.command);
                 outViews.appendChild(btn);
             });
             document.getElementById('btnInViews').onclick = (e) => {
@@ -148,13 +181,13 @@
             };
         });
     </script>
-    <div id="body" style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
+    <div id="body" style="position: fixed; width: 100%; height: 100%; overflow: hidden;">
         <button id="btnInViews" class="float-button button-page"
-            style="top: 10px; left: 10px;">IN</button>
+            style="top: 10px; left: 10px; z-index: 100;">IN</button>
         <button id="btnOutViews" class="float-button button-page"
-            style="top: 10px; right: 10px;">OUT</button>
+            style="top: 10px; right: 10px; z-index: 100;">OUT</button>
         <button id="btnMenu" class="float-button button-page"
-            style="bottom: 10px; left: 10px;">MENU</button>
+            style="bottom: 10px; left: 10px; z-index: 100;">MENU</button>
         <div id="menu" class="menu-container" style="display: none; margin-top: 100px;"></div>
         <div id="inFrame" style="transform: scale(0.75); transform-origin: top left;">
             <div style="position: relative; width: 800px; margin: 0 0;" id="internalViews">
