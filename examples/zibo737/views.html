@@ -17,13 +17,21 @@
 
 <body>
     <script>
+        const connectionModes = {
+            xplDataRefs: 1, // use plain X-Plane dataRefs to set view coordinates
+            xplXCameraCommand: 2, // use X-Camera commands to set view coordinates
+            msfsWebApi: 3, // use Microsoft Flight Simulator Web API to set view coordinates: https://github.com/me2d13/msfs-web-api
+        }
+        const config = {
+            simPlaneHost: '192.168.1.105',
+            connectionMode: connectionModes.xplDataRefs, 
+        }
         const xplApi = XplWebApi({
-            apiUrl: 'http://192.168.1.105/xpl-api/api/v2',
-            webSocketUrl: 'ws://192.168.1.105:8020/api/v2',
+            apiUrl: `http://${config.simPlaneHost}/xpl-api/api/v2`,
+            webSocketUrl: `ws://${config.simPlaneHost}:8020/api/v2`,
         });
-        const useCoordinates = true
         const coordinatesByName = {};
-        if (useCoordinates) {
+        if (config.connectionMode === connectionModes.xplDataRefs) {
             // load coordinates from view-coordinates.js
             viewCoordinates.forEach(coord => {
                 coordinatesByName[coord.name] = coord.datarefs;
